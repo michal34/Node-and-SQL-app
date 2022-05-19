@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel-Administatora</title>
+</head>
+<body>
+    <div id="container">
+         <h1>Szczepionki które są aktualnie dostępne</h1>
+        <table id="dawki">
+            <thead>
+                <tr>
+                    <th>Producent</th>
+                    <th>Termin od</th>
+                    <th>Termin do</th>
+                    <th></th>
+                </tr>
+            </thead>      
+            <tbody>
+    
+            </tbody>
+        </table>
+        <h2>Dodaj szczepionkę</h2>
+        <form id="dodajSzczepionkę">
+            <fieldset>
+                <label for="placówkaId">Id placówki w której będzie używana</label>
+                <input type="text" id="placówkaId" required>
+
+                <label for="producent">Producent</label>
+                <input type="text"id="producent" required>
+    
+                <label for="ilość">Ilość</label>
+                <input type="number"id="ilosc" required>
+    
+                <label for="terminOd">Termin od</label>
+                <input type="date" id="terminOd" required>
+    
+                <label for="terminDo">Termin do</label>
+                <input type="date" id="terminDo" required>
+
+                <input type="submit" value="Dodaj szczepionkę">
+            </fieldset>
+          </form>
+    </div>
+    <div>
+        <h1>Placówki które są aktualnie dostępne</h1>
+        <table id="placowki">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Miasto</th>
+                    <th>Ulice</th>
+                    <th>Numer budynku</th>
+                    <th></th>
+                </tr>
+            </thead>      
+            <tbody>
+    
+            </tbody>
+        </table>
+        <h2>Dodaj placówkę</h2>
+        <form id="dodajPlacówkę">
+            <fieldset>
+                <label for="miasto">Miasto</label>
+                <input type="text"id="miasto" required>
+    
+                <label for="ulica">Ulica</label>
+                <input type="text"id="ulica" required>
+    
+                <label for="numerbudynku">Numer budynku</label>
+                <input type="number" id="numerBudynku" required>
+    
+                <input type="submit" value="Dodaj">
+            </fieldset>
+          </form>
+    </div>
+
+    <button id="logout">Wyloguj</button>
+
+    <script>
+        document.getElementById('logout').addEventListener('click', e => {
+            wyloguj();
+        })
+        function wyloguj() {
+            fetch('/api/logout', {
+                method: 'POST'
+            })
+                .then(() => {
+                    document.location.replace('index.html')
+                })
+        }
+        fetch('/api/dawki')
+            .then(response => response.json())
+            .then(dawki => renderDawki(dawki))
+
+        function renderDawki(dawki) {
+            const tbody = document.querySelector('#dawki tbody');
+
+            dawki.forEach(dawka => {
+                TerminOd = new Date(dawka.TerminOd)
+                TerminDo = new Date(dawka.TerminDo)
+                const tr = document.createElement('TR');
+                const tdName = document.createElement('TD')
+                tdName.innerHTML = dawka.Producent;
+                const tdDateFrom = document.createElement('TD')
+                tdDateFrom.innerText = TerminOd.toLocaleDateString();
+                const tdDateTo = document.createElement('TD')
+                tdDateTo.innerText = TerminDo.toLocaleDateString();
+                const tdDel = document.createElement('TD')
+                tdDel.innerHTML = '<button class="button">Usuń</button>';
+
+                tdDel.addEventListener('click', () => {
+
+                    if (confirm('Czy na pewno chcesz usunąć tą dawkę?')) {
+                        usunDawke(dawka.Id)
+                    }
+
+                })
+
+                tr.append(tdName, tdDateFrom, tdDateTo, tdDel);
+                tbody.append(tr);
+            });
+
+        }
+
+        function usunDawke(id) {
+            const data = {
+                id: id
+            }
+
+            fetch('/api/usunDawke', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+                .then(() => {
+                    location.reload()
+                })
+        }
+
+        fetch('/api/placowki')
+            .then(response => response.json())
+            .then(placowki => renderPlacowki(placowki))
+                
+        function renderPlacowki(placowki) {
+            const tbody = document.querySelector('#placowki tbody');
+
+            placowki.forEach(placowki => {
+                const tr = document.createElement('TR');
+                const tdId = document.createElement('TD')
+                tdId.innerText = placowki.Id;
+                const tdName = document.createElement('TD')
+                tdName.innerText = placowki.Miasto;
+                const tdDateFrom = document.createElement('TD')
+                tdDateFrom.innerText = placowki.Ulica;
+                const tdDateTo = document.createElement('TD')
+                tdDateTo.innerText = placowki.NumerBudynku;
+                const tdDel = document.createElement('TD')
+                tdDel.innerHTML = '<button class="button">Usuń</button>';
+
+                tdDel.addEventListener('click', () => {
+
+                    if (confirm('Czy na pewno chcesz usunąć tą placówkę?')) {
+                        usunPlacowke(placowki.Id)
+                    }
+                })
+                tr.append(tdId, tdName, tdDateFrom, tdDateTo, tdDel);
+                tbody.append(tr);
+            });
+        }
+
+        function usunPlacowke(id) {
+            const data = {
+                id: id
+            }
+
+            fetch('/api/usunPlacowke', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+                .then(() => {
+                    location.reload()
+                })
+                
+        }
+
+        document.getElementById('dodajSzczepionkę').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const data = {
+                placówkaId: document.querySelector('#placówkaId').value,
+                producent: document.querySelector('#producent').value,
+                ilosc: document.querySelector('#ilosc').value,
+                terminOd: document.querySelector('#terminOd').value,
+                terminDo: document.querySelector('#terminDo').value
+            }
+
+            fetch('/api/dodajSzczepionke', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+          })
+            .then(data => {
+                location.reload()
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        })
+
+        document.getElementById('dodajPlacówkę').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const data = {
+                miasto: document.querySelector('#miasto').value,
+                ulica: document.querySelector('#ulica').value,
+                numerBudynku: document.querySelector('#numerBudynku').value
+            }
+
+            fetch('/api/dodajPlacowke', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+          })
+            .then(data => {
+                location.reload()
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+            console.log(data)
+        })
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logowanie</title>
+</head>
+<body>
+    <div id="login">
+    </div>
+
+    <script>
+        fetch('/api/user')
+            .then(response => response.json())
+            .then(uzytkownik => {
+                if (uzytkownik.Imie) {
+                    zalogowany(uzytkownik)
+                } else {
+                    niezalogowany()
+                }
+            });
+
+        function zalogowany(uzytkownik) {
+            if (uzytkownik.Id === 1) {
+                document.location.replace('panel-administratora.html')
+            } else {
+                document.location.replace('panel-użytkownika.html')
+            }
+        }
+
+        function niezalogowany(uzytkownik) {
+            const login = document.getElementById('login');
+            const linkLogin = document.createElement('A');
+            const linkRejestacja = document.createElement('A');
+            linkLogin.href = '/logowanie.html';
+            linkLogin.innerText = 'Zaloguj się';
+            linkRejestacja.href = '/rejestracja.html';
+            linkRejestacja.innerText = 'Zarejestruj się';
+        
+            login.append(linkLogin, linkRejestacja);
+        }
+    </script>
+</body>
+</html>

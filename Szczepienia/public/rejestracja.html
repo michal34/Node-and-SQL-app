@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rejestracja</title>
+</head>
+<body>
+    <div id="container">
+        <h1>Wybierz szczepionkę i odpowiadający Ci termin</h1>
+        <table id="dawki">
+            <thead>
+                <tr>
+                    <th>Producent</th>
+                    <th>Termin od</th>
+                    <th>Termin do</th>
+                    <th></th>
+                </tr>
+            </thead>      
+            <tbody>
+    
+            </tbody>
+        </table>
+    </div>
+    <div style="display: none;" id="container2">
+        <table id="placowki">
+            <h1>Adres placówki w której możesz otrzymać szczepionkę</h1>
+            <thead>
+                <tr>
+                    <th>Miasto</th>
+                    <th>Ulica</th>
+                    <th>Numer budynku</th>
+                </tr>
+            </thead>   
+            <tbody>
+    
+            </tbody>
+        </table>
+        <button id="wróć">Wróć do wyboru szczepionki</button>
+        <div>
+            <form class="container">
+                <fieldset>
+                    <label for="imie">Imie</label>
+                    <input type="text"id="imie" required>
+        
+                    <label for="nazwisko">Nazwisko</label>
+                    <input type="text"id="nazwisko" required>
+        
+                    <label for="dataSzczepienia">Data Szczepieia</label>
+                    <input type="date" id="dataSzczepienia" required>
+
+                    <label for="Login">Login</label>
+                    <input type="text" id="login" required>
+
+                    <label for="hasło">Hasło</label>
+                    <input type="password" id="hasło" required>
+                    
+                    <input type="submit" value="Zarejestruj się na szczepienie">
+                </fieldset>
+              </form>
+        </div>
+    </div>
+    <div>
+        <a href="index.html">Powrót</a>
+    </div>
+    
+
+    <script>
+        fetch('/api/dawki')
+            .then(response => response.json())
+            .then(dawki => render(dawki))
+
+        function render(dawki) {
+            const tbody = document.querySelector('#dawki tbody');
+
+            dawki.forEach(dawki => {
+                TerminOd = new Date(dawki.TerminOd)
+                TerminDo = new Date(dawki.TerminDo)
+                const tr = document.createElement('TR');
+                const tdName = document.createElement('TD')
+                tdName.innerText = dawki.Producent;
+                const tdDateFrom = document.createElement('TD')
+                tdDateFrom.innerText = TerminOd.toLocaleDateString();
+                const tdDateTo = document.createElement('TD')
+                tdDateTo.innerText = TerminDo.toLocaleDateString();
+                const tdChoose = document.createElement('TD')
+                tdChoose.innerHTML = '<button type="&larr;">Wybierz</button>';
+
+                tdChoose.addEventListener('click', () => {
+                    if (confirm('Czy na pewno chcesz wybrać szczepionkę firmy ' + dawki.Producent + '?')) {
+                        WybierzDawke(dawki.PlacówkaId);
+                        document.getElementById('container2').style.display = 'inline'
+                        document.getElementById('container').style.display = 'none' 
+                    }
+                })
+                tr.append(tdName, tdDateFrom, tdDateTo, tdChoose);
+                tbody.append(tr);
+            });
+        }
+
+        var data2 = null
+
+        function WybierzDawke(id) {
+            const data = {
+                    id: id
+            }
+            data2 = data
+            fetch('/api/placowka', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+                
+                .then(response => response.json())
+                .then(placowki => render(placowki))
+                
+                function render(placowki) {
+                    const tbody = document.querySelector('#placowki tbody');
+
+                    placowki.forEach(placowki => {
+                        const tr = document.createElement('TR');
+                        const tdName = document.createElement('TD')
+                        tdName.innerText = placowki.Miasto;
+                        const tdDateFrom = document.createElement('TD')
+                        tdDateFrom.innerText = placowki.Ulica;
+                        const tdDateTo = document.createElement('TD')
+                        tdDateTo.innerText = placowki.NumerBudynku;
+                        
+                        tr.append(tdName, tdDateFrom, tdDateTo);
+                        tbody.append(tr);
+                    });
+                }
+        }
+        document.getElementById('wróć').onclick = function() {
+            location.reload()
+        }
+        const form = document.querySelector('form')
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const data1 = {
+                placówkaId: data2.id,
+                imie: document.querySelector('#imie').value,
+                nazwisko: document.querySelector('#nazwisko').value,
+                dataSzczepienia: document.querySelector('#dataSzczepienia').value,
+                login: document.querySelector('#login').value,
+                haslo: document.querySelector('#hasło').value
+            }
+
+            fetch('/api/rejestracja', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data1),
+          })
+            .then(data => {
+              document.location.href = 'index.html'
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+            });
+        })
+
+    </script>
+</body>
+</html>

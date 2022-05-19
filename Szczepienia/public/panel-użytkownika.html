@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel-Użytkownika</title>
+</head>
+<body>
+    <h1>Informacje o twoim szczepieniu</h1>
+    <div>
+        <table id="user">
+            <thead>
+                <tr>
+                    <th>Imię</th>
+                    <th>Nazwisko</th>
+                    <th>Data szczepienia</th>
+                    <th>Preparat</th>
+                    <th>Miasto</th>
+                    <th>Ulica</th>
+                    <th>Numer budynku</th>
+                </tr>
+            </thead>      
+            <tbody>
+                <tr id="TR">
+
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <button id="logout">Wyloguj</button>
+
+    <script>
+        var idDawki = null
+        var idPlacówki = null
+        document.getElementById('logout').addEventListener('click', e => {
+            wyloguj();
+        })
+        function wyloguj() {
+            fetch('/api/logout', {
+                method: 'POST'
+            })
+                .then(() => {
+                    document.location.replace('index.html')
+                })
+        }
+
+        fetch('/api/information')
+            .then(response => response.json())
+            .then(uzytkownik => render(uzytkownik))
+
+        function render(uzytkownik) {
+            const tr = document.getElementById('TR')
+
+            uzytkownik.forEach(uzytkownik => {
+                DataSzczepienia = new Date(uzytkownik.DataSzczepienia)
+                const tdName = document.createElement('TD')
+                tdName.innerText = uzytkownik.Imie;
+                const tdSurname = document.createElement('TD')
+                tdSurname.innerText = uzytkownik.Nazwisko;
+                const tdDate = document.createElement('TD')
+                tdDate.innerText = DataSzczepienia.toLocaleDateString();
+
+                tr.append(tdName, tdSurname, tdDate);
+
+                    idDawki = uzytkownik.DawkaId
+            });
+
+            const data = {
+                id: idDawki
+            }
+            
+            fetch('/api/dawkiInformacje', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(dawkiInformacje => render1(dawkiInformacje))
+
+            function render1(dawkiInformacje) {
+
+                dawkiInformacje.forEach(dawkiInformacje => {
+                    const tdMaker = document.createElement('TD')
+                    tdMaker.innerText = dawkiInformacje.Producent;
+                    
+                    tr.append(tdMaker)
+
+                    idPlacówki = dawkiInformacje.PlacówkaId
+                })
+                const data1 = {
+                    id: idPlacówki
+                }
+                console.log(data1)
+                fetch('/api/placowka', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data1),
+                })
+                .then(response => response.json())
+                .then(placowkiInformacje => render2(placowkiInformacje))
+
+            function render2(placowkiInformacje) {
+                placowkiInformacje.forEach(placowkiInformacje => {
+                    const tdCity = document.createElement('TD')
+                    tdCity.innerText = placowkiInformacje.Miasto;
+                    const tdStreet = document.createElement('TD')
+                    tdStreet.innerText = placowkiInformacje.Ulica;
+                    const tdNumber = document.createElement('TD')
+                    tdNumber.innerText = placowkiInformacje.NumerBudynku
+
+                    tr.append(tdCity, tdStreet, tdNumber)
+                })
+            }
+            }
+        }
+
+    </script>
+</body>
+</html>

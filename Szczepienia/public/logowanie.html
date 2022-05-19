@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logowanie</title>
+</head>
+<body>
+    <div>
+        <h1>Panel logowania</h1>
+        <form id="loginForm">
+                <p>Login</p>
+                <input type="text" id="login" required>
+
+                <p>Hasło</p>
+                <input type="password" id="haslo" required>
+
+                <input type="submit" value="Zaloguj">
+        </form>
+        <a href="index.html">Powrót</a>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const data = {
+                login: document.getElementById('login').value,
+                haslo: document.getElementById('haslo').value
+            };
+
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    document.location.replace('index.html');
+                } else {
+                    alert('Logowanie nieudane');
+                    form.reset();
+                }
+            })
+        });
+    </script>
+</body>
+</html>
